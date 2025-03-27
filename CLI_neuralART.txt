@@ -1,0 +1,32 @@
+--------------------------------------PROJECT COMPILATION STEPS--------------------------------------
+
+$directoryToRemove = "C:\Users\marciasm\cubeai_n6\Utilities\windows"
+
+$directoriesToRemove = @("C:\Users\marciasm\cubeai_n6\Utilities\windows", "C:\ST\STEdgeAI\2.0\Utilities\windows")
+
+$Env:PATH += ";C:\ST\STEdgeAI\2.0\Utilities\windows\"
+
+$Env:PATH += ";C:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130\tools\bin\"
+
+$Env:PATH += ";C:\ST\STEdgeAI\2.0\scripts\ai_runner\"
+
+
+$Env:PATH += ";C:\ST\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.make.win32_2.2.0.202409170845\tools\bin\"
+
+stedgeai generate -m quantized_tiny_yolo_v2_224_.tflite --target stm32n6 --st-neural-art default@user_neuralart.json
+
+copy st_ai_output\network_atonbuf.xSPI2.raw network_data.xSPI2.bin
+
+copy st_ai_output\network.c .
+
+copy st_ai_output\network_ecblobs.h .
+
+arm-none-eabi-objcopy -I binary network_data.xSPI2.bin --change-addresses 0x70380000 -O ihex network_data.hex
+
+
+---------------------------------------- VALIDATION STEPS ---------------------------------
+
+stedgeai generate -m mobilenet_v2_0.35_224_fft_int8.tflite --target stm32n6 --st-neural-art default@user_neuralart.json
+python "C:\ST\STEdgeAI\2.0\scripts\N6_scripts\n6_loader.py" --project-path "C:\ST\STEdgeAI\2.0\Projects\STM32N6570-DK\Applications\NPU_Validation\" --network-file st_ai_output\network.c
+stedgeai validate --model mobilenet_v2_0.35_224_fft_int8.tflite --target stm32 --mode target -d serial:921600
+stedgeai validate --model mobilenet_v2_0.35_224_fft_int8.tflite --target stm32 --mode target -d serial:921600 -vi input_20_images.npy
