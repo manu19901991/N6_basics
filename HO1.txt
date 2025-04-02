@@ -1,0 +1,1 @@
+STM32_SigningTool_CLI.exe -bin ${ProjName}.bin -nk -of 0x80000000 -t fsbl -o ${ProjName}_trusted.bin -hv 2.3 -s
